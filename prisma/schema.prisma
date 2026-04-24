@@ -33,6 +33,8 @@ model User {
   id         String     @id @default(uuid()) @db.Uuid
   first_name String     @db.VarChar(255)
   last_name  String     @db.VarChar(255)
+  email      String     @unique @db.VarChar(255)
+  password   String     @db.VarChar(255)
   age        Int?
   is_active  Boolean    @default(true)
   role_id    String?    @db.Uuid
