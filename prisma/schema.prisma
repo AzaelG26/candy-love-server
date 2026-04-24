@@ -1,0 +1,126 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum OrderStatus {
+  pending
+  shipped
+  delivered
+  cancelled
+}
+
+model Role {
+  id        String   @id @default(uuid()) @db.Uuid
+  rol_name  String   @db.VarChar(100)
+  is_active Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  users     User[]
+
+  @@map("roles")
+}
+
+model User {
+  id         String     @id @default(uuid()) @db.Uuid
+  first_name String     @db.VarChar(255)
+  last_name  String     @db.VarChar(255)
+  age        Int?
+  is_active  Boolean    @default(true)
+  role_id    String?    @db.Uuid
+  role       Role?      @relation(fields: [role_id], references: [id], onDelete: SetNull)
+  createdAt  DateTime   @default(now()) @map("created_at")
+  updatedAt  DateTime   @updatedAt @map("updated_at")
+  orders     Order[]
+  audit_logs AuditLog[]
+
+  @@map("users")
+}
+
+model Category {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @db.VarChar(100)
+  description String?  @db.Text
+  image_url   String?  @db.Text
+  
+  parentId      String?    @db.Uuid @map("parent_id")
+  parent        Category?  @relation("SubCategories", fields: [parentId], references: [id])
+  subCategories Category[] @relation("SubCategories")
+
+  is_active   Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  items       Item[]
+
+  @@map("categories")
+}
+
+model Item {
+  id           String      @id @default(uuid()) @db.Uuid
+  name         String      @db.VarChar(255)
+  description  String?     @db.Text
+  price        Decimal     @db.Decimal(10, 2)
+  image_url    String?     @db.Text
+  category_id  String?     @db.Uuid
+  category     Category?   @relation(fields: [category_id], references: [id], onDelete: SetNull)
+  is_available Boolean     @default(true)
+  is_active    Boolean     @default(true)
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+  order_items  OrderItem[]
+
+  @@map("items")
+}
+
+model Order {
+  id           String      @id @default(uuid()) @db.Uuid
+  user_id      String?     @db.Uuid
+  user         User?       @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  address      String?     @db.Text
+  total_amount Decimal     @default(0) @db.Decimal(10, 2)
+  status       OrderStatus @default(pending)
+  is_active    Boolean     @default(true)
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+  order_items  OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id         String   @id @default(uuid()) @db.Uuid
+  order_id   String?  @db.Uuid
+  order      Order?   @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  item_id    String?  @db.Uuid
+  item       Item?    @relation(fields: [item_id], references: [id], onDelete: SetNull)
+  unit_price Decimal  @db.Decimal(10, 2)
+  quantity   Int
+  is_active  Boolean  @default(true)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("order_items")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  table_name String   @db.VarChar(255)
+  record_id  String   @db.Uuid
+  action     String   @db.VarChar(10)
+  old_value  Json?
+  new_value  Json?
+  user_id    String?  @db.Uuid
+  user       User?    @relation(fields: [user_id], references: [id])
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([table_name, record_id])
+  @@map("audit_logs")
+}
