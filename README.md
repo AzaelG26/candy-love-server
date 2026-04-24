@@ -11,7 +11,6 @@ Servidor encargado de la lógica de negocio y gestión de datos (En desarrollo).
 ## En desarrollo
 - [x] Arquitectura de categorías recursivas
 - [x] Modelado de base de datos (Users, Roles, Items)
-- [/] CRUD de Items (Básico)
 - [ ] Integración para subida de imágenes a S3
 
 ## Configuración local
